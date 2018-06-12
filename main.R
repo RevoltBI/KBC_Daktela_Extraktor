@@ -218,7 +218,7 @@ write_endpoint<-function(endpoint,token,from=NULL,limit=1000){
   logfile_created<-file.exists("data/out/tables/out_log.csv")
   
   log<-data_frame("date"=Sys.time(),"endpoint"=endpoint[[3]],"exported_records"=total,"extraction_time"=time, "call"=call)
-  fwrite(log,paste0("data/out/tables/",prefix,"log.csv"),append=logfile_created)
+  write_csv(log,paste0("data/out/tables/",prefix,"log.csv"),append=logfile_created)
   
   #Writes the manifest file
   if(logfile_created) app$writeTableManifest(paste0("data/out/tables/",prefix,"log.csv"), primaryKey = c("date","endpoint"),incremental = T)
