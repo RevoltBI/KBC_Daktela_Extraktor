@@ -1,3 +1,4 @@
+
 # Libraries ---------------------------------------------------------------
 
 ## API calls with R
@@ -24,7 +25,6 @@ suppressPackageStartupMessages(library(furrr, quietly = TRUE))
 
 # Input config ------------------------------------------------------------
 
-
 ## initialize keboola application this saves all user inputs from the extractor to variables
 library('keboola.r.docker.application')
 app <- DockerApplication$new('./data/')
@@ -39,12 +39,15 @@ pwd<-app$getParameters()$'#pwd'
 server<-app$getParameters()$'server'
 ## The date
 days_past<-app$getParameters()$from
-## Incremental load
-incremental<-app$getParameters()$incremental
 ## use this attribute in development to see progress bars from furrr
 progress_bars<-F
 ## this attribute sets multicore usage sequential is default other options are multicore and multisession
 plan<-app$getParameters()$plan
+## Incremental load
+incr_load<-app$getParameters()$incr
+## Destination bucket selection
+#bucket<-app$getParameters()$destination
+
 
 # Init --------------------------------------------------------------------
 
@@ -120,6 +123,9 @@ sanitize<-function(res,names_unique,df_name){
   #renames the name to activity_name in case of the activities_item tables
   if(df_name %in% c("activitiesChat","activitiesEmail","activitiesCall")){ res<-res%>%rename(activities_name=name)}
   
+  #renames the cols and replaces . by _
+  names(res)<-str_replace_all(names(res),"\\.","_")
+  
   res
   
 }
@@ -128,7 +134,7 @@ sanitize<-function(res,names_unique,df_name){
 #?fields[0]=firstname&fields[1]=lastname&fields[2]=account.title
 
 get_fields<-function(fields){
-  
+
   elements<-map2_chr(fields,seq_along(fields)-1, function(x,y){ paste0("fields[",y,"]=",x) })
   string=paste0(elements, collapse = "&")
   
@@ -180,7 +186,10 @@ write_endpoint<-function(endpoint,token,from=NULL,limit=1000){
     rows_fetched<-0
     res<-setNames(data.frame(matrix(ncol = length(endpoint[[4]]) , nrow = 0)), endpoint[[4]])
     #If i = 0 then initialize the file else append the csv using fwrite from data.table in order to not waste RAM
-    fwrite(res,paste0("data/out/tables/",prefix,endpoint[[3]],".csv"),append = FALSE, sep=",", sep2=c("{","|","}"))
+    fwrite(res,paste0("/data/out/tables/",prefix,endpoint[[3]],".csv"),append = FALSE, sep=",", sep2=c("{","|","}"))
+    
+    #csvFileName<-paste0("/data/out/tables/",prefix,endpoint[[3]],".csv")
+    #write.csv(res,file=csvFileName,row.names = FALSE)
     
   } else {
     
@@ -200,7 +209,10 @@ write_endpoint<-function(endpoint,token,from=NULL,limit=1000){
             .$result%>%.$data%>%as_data_frame%>%sanitize(endpoint[[4]],endpoint[[3]])
           
           #If i = 0 then initialize the file else append the csv using fwrite from data.table in order to not waste RAM
-          fwrite(res,paste0("data/out/tables/",prefix,endpoint[[3]],".csv"),append = ifelse(i>0,TRUE,FALSE), sep=",", sep2=c("{","|","}"))
+          fwrite(res,paste0("./data/out/tables/",prefix,endpoint[[3]],".csv"),append = ifelse(i>0,TRUE,FALSE), sep=",", sep2=c("{","|","}"))
+          
+          #csvFileName<-paste0("/data/out/tables/",prefix,endpoint[[3]],".csv")
+          #write.csv(res,file=csvFileName,row.names = FALSE)
           
           cnt<-nrow(res) },
         error=function(e){print(paste0("iteration: ",as.integer(i)%>%as.character, "failed. Error: ",message(e))); return(0)})
@@ -215,16 +227,21 @@ write_endpoint<-function(endpoint,token,from=NULL,limit=1000){
   
   #Process log info
   ## Check if out_log.csv exists
-  logfile_created<-file.exists("data/out/tables/out_log.csv")
+  logfile_created<-file.exists(paste0("./data/out/tables/",prefix,"log.csv"))
   
   log<-data_frame("date"=Sys.time(),"endpoint"=endpoint[[3]],"exported_records"=total,"extraction_time"=time, "call"=call)
-  write_csv(log,paste0("data/out/tables/",prefix,"log.csv"),append=logfile_created)
+  fwrite(log,paste0("./data/out/tables/",prefix,"log.csv"),append=logfile_created)
+  
   
   #Writes the manifest file
-  if(logfile_created) app$writeTableManifest(paste0("data/out/tables/",prefix,"log.csv"), primaryKey = c("date","endpoint"),incremental = T)
   
-    
-  app$writeTableManifest(paste0("data/out/tables/",prefix,endpoint[[3]],".csv"), primaryKey = endpoint[[4]][names(endpoint[[4]]) %in% c("primary_key","secondary_key")],incremental = incremental)
+  ## define secondary key by default due to "activities" addition in column name 
+  if(endpoint[[3]] %in% c("activitiesChat","activitiesEmail","activitiesCall")){endpoint[[4]]["secondary_key"]<-"activities_name"}
+  
+  if(logfile_created) app$writeTableManifest(paste0("./data/out/tables/",prefix,"log.csv"), primaryKey = c("date","endpoint"),incremental = incr_load,destination="in.c-DaktelaTest")
+  
+  
+  app$writeTableManifest(paste0("./data/out/tables/",prefix,endpoint[[3]],".csv"), primaryKey = endpoint[[4]][names(endpoint[[4]]) %in% c("primary_key","secondary_key")]%>%str_replace_all("\\.","_"),incremental = incr_load, destination="in.c-DaktelaTest")
   
 }
 
