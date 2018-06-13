@@ -1,12 +1,10 @@
-library('devtools')
-
-# install the transformation application ancestors
-devtools::install_github('keboola/r-application', ref = "master", force = TRUE)
-devtools::install_github('keboola/r-docker-application', ref = "master", force = TRUE)
-devtools::install_github("keboola/sapi-r-client", ref = "master", force = TRUE)
-install.packages("aws.ec2metadata", repos = c(cloudyr = "http://cloudyr.github.io/drat", getOption("repos")))
-install.packages("aws.signature", repos = c(cloudyr = "http://cloudyr.github.io/drat", getOption("repos")))
-
 # install really required packages
-withCallingHandlers(install.packages("future"), warning = function(w) stop(w))
-withCallingHandlers(devtools::install_github("DavisVaughan/furrr"),warning = function(w) stop(w))
+withCallingHandlers(install.packages(
+    c('devtools','future','dplyr','data.table','readr','tidyr','digest','stringr','lubridate','purrr','jsonlite','httr'), 
+    lib = "/usr/local/lib/R/site-library/"), warning = function(w) stop(w))
+
+# install the R application
+devtools::install_github('keboola/r-docker-application', ref = "2.0.2")
+devtools::install_github('keboola/r-application', ref = "master", force = TRUE)
+devtools::install_github('DavisVaughan/furrr', ref = "master", force = TRUE) 
+devtools::install_github('hadley/dplyr', ref = "master", force = TRUE)
