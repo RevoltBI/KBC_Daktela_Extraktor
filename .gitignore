@@ -5,4 +5,6 @@
 .RData
 .Rhistory
 .DS_STORE
+.DS_Store
+.Rproj.user/shared
 
