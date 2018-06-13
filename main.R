@@ -53,6 +53,9 @@ incr_load<-app$getParameters()$incr
 
 if(plan=="sequential" || is.null(plan)){plan(sequential)}else{plan(multisession)}
 
+## Print plan
+write(paste0("Extraction runs on ",plan," plan. Writes ", if_else(incr_load, "incerementally", "full load")),stdout())
+
 ## Daktela server url
 url<-paste0("https://",server,".daktela.com")
 
@@ -504,8 +507,6 @@ names_activities <-
     "important",
     "status"
   )
-
-
 
 activities<-list("/api/v6/activities.json","time","activities",names_activities,FALSE)
 write_endpoint(activities,token,from = from)
