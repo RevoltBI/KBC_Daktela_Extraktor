@@ -36,7 +36,7 @@ ________________________________________________________________________________
 * Daktela time to times returns orphaned items - and activity of type "Call" can exist while there is no call associated to this. This items are deleted by the script to keep referential integrity.  
 * The skript downloads just records created at least 30 minutes ago to prevent downloading not finished calls.
 
-## Transformace dat
+## Sata transformation
 * Daktela server name is included as a prefix of all keys..
 * Table names will include server name prefix -> serverName_tableName 
 * The extractor downloades just the first level of attributes returned as a nested Json. Other atributes among hundreds from lower levels were chosen arbitrarily.
