@@ -41,3 +41,5 @@ ________________________________________________________________________________
 * Table names will include server name prefix -> serverName_tableName 
 * The extractor downloades just the first level of attributes returned as a nested Json. Other atributes among hundreds from lower levels were chosen arbitrarily.
 * The script omits items without an activity from the operator. It is usually email SPAM, abandoned call are included. 
+
+By [Revolt BI](http://www.revolt.bi)
