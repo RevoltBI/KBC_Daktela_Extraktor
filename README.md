@@ -1,3 +1,5 @@
+# DEPRECATED
+
 Daktela contact center is a cloud-based solution of call center with native support for many communication channels "OmniChannel" in one Web application - phone, email, helpdesk, Webchat, SMS and social networks.
 
 The extractor is built according the [Daktela API V6](https://www.daktela.com/api/v6/) docs. 
